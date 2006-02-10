@@ -1,0 +1,20 @@
+* What's Kbi:
+
+Kbi is a small aplication to organize source code into a database. It uses
+SQLite and PyGTK to save your code. It can export, add, delete, and search
+quickly pieces of code. 
+
+* Dependencies:
+
+PyGTK, SQLite(2,3), pySQLite
+
+* Licence:
+
+Kbi is under GPLv2.
+
+* Install IT:
+
+Read INSTALL
+
+* Author:
+Luis Marques - Drune@gmx.net

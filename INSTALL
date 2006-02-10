@@ -1,0 +1,5 @@
+** KBI **
+
+Install:
+	- Go to the source
+	- as root, type: python setup.py install

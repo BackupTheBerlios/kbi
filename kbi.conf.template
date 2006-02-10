@@ -1,0 +1,5 @@
+[basic]
+export=~/Desktop
+
+[categories]
+all=ASM-asm,Bash-sh,C-c,C#-cs,Css-css,HTML-html,Java-java,JavaScript-js,Lisp-lsp,Pascal-pas,Perl-pl,Python-py,PHP-php,SQL-sqp,XML-xml
