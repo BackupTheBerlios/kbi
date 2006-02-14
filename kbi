@@ -29,31 +29,26 @@ def searchI(obj):
 	searchItens(widgetTree)
 
 def removeI(obj):
-	kbi_base.removeItem(tree_search, "db.dat")
+	kbi_base.removeItem(tree_search)
 	# refresh ..
-	kbi_base.listALL(tree_mod, "db.dat")
+	kbi_base.listALL(tree_mod)
 
 def show_ALL_itens(obj):
-	kbi_base.listALL(tree_mod, "db.dat")
+	kbi_base.listALL(tree_mod)
 
 
 def exportTo(obj):
-	if kbi_base.processText(returnExt(), tree_search, "db.dat") == 1:
+	if kbi_base.processText(kbi_conf.returnExt(), tree_search) == 1:
 		kbi_ui.message("Kbi: File Exported to "+kbi_conf.returnExportConf(), window)
 	else:
 		kbi_ui.error("Kbi: Error Exporting File to "+kbi_conf.returnExportConf(), window)
-def saveConf(obj):
-	if kbi_conf.SaveConfiguration(widgetTree) == 1:
-		kbi_ui.message("Kbi: Configuration File Saved!", window)
-	else:
-		kbi_ui.error("Kbi: Error Saving File..", window)
-	
+
 
 def searchItens(widgetTree):
 	try:
 		esearch = widgetTree.get_widget("esearch")
 		text = esearch.get_text()
-		kbi_base.search(tree_mod, "db.dat", text)
+		kbi_base.search(tree_mod, text)
 
 
 	except IOError: 
@@ -78,74 +73,43 @@ def setInitPrefs(widgetTree):
 	fe = widgetTree.get_widget("texport")
 	fe.set_text(kbi_conf.returnExportConf())
 
-## RETURN ALL CODE CATEGORIES ###
-def getAllCats(widgetTree):
-	cat = widgetTree.get_widget("text_cat")
-	mo=cat.get_model()
-	mo.clear()
-	all = kbi_conf.returnAllCat()
-	
-	
-	for i in all.split(" "):
-		x=i.split(",")
-	for j in x:
-		r=j.split("-")
-		cat.append_text(r[0])
-		
-	
 
-## RETURN FILE EXTENSIONS ##
-def returnExt():
-	ext={} # dict. with extensions
-	all = kbi_conf.returnAllCat()
-	for i in all.split(" "):
-		x=i.split(",")
 
-	for j in x:
-		r=j.split("-")
-		ext[r[0]]=r[1]
 
-	return ext
 
 ### EXPORT DATABASE ###
 def exportDBUI(obj):
-	if kbi_base.exportDB() == 1:
-		kbi_ui.message("Kbi: DataBase Exported to "+kbi_conf.returnExportConf(), window)
-	else:
-		kbi_ui.error("Kbi: Error Exporting DataBase to "+kbi_conf.returnExportConf(), window)
-		
-
-#NEW WINDOW - New Category #########################
-def addNewCat(obj):
-	kbi_base.addCat(widgetTreeCat)
-	#refresh..
-	cat = widgetTree.get_widget("text_cat")
-	mo=cat.get_model()
-	mo.clear()
-	getAllCats(widgetTree)
-
-
-
-def addCatUI(obj):
-	wcat = widgetTreeCat.get_widget("wnewCat")
+	kbi_ui.saveDialog(widgetTree, "Export Database")
 	
-	r= wcat.run()
-	if r == gtk.RESPONSE_OK:
-		print "Category Saved.."
-		addNewCat(obj)
-		kbi_ui.message("Kbi: Category Saved!", window)
-	wcat.hide()
 
-######################################################	
+def addCatInterface(obj):
+	kbi_base.addCatUI(widgetTree)
+
+def addNewDatabaseUI(obj):
+	kbi_base.newDatabase(widgetTree)
 
 
+def changeExportPathUI(obj):
+	ed = kbi_ui.changeExportPath()
+	kbi_conf.SaveConfiguration(widgetTree, ed)
+	
+	etex = widgetTree.get_widget("texport")
+	etex.set_text(kbi_conf.returnExportConf())
+	
+
+def importDatabase(obj):
+	kbi_ui.ImportDialog(widgetTree, "Import Database")
+	#clear databases and reload databases
+	kbi_base.returnDBs(widgetTree)
 #MAIN CODE...
-tree_mod=gtk.TreeStore(gobject.TYPE_STRING,
-                             gobject.TYPE_STRING, gobject.TYPE_STRING)
 
+
+tree_mod=gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
 widgetTree = gtk.glade.XML("/usr/share/kbi/kbi.glade")
-widgetTreeCat = gtk.glade.XML("/usr/share/kbi/kbi.glade", "wnewCat")
-   
+
+
+
+
 dic = {"on_codepy_destroy" : DestroyFunction,
 	"on_quit2_activate": DestroyFunction,
 		"on_saveCode_clicked": saveDataBaseObj,
@@ -154,20 +118,16 @@ dic = {"on_codepy_destroy" : DestroyFunction,
 		"on_breload_clicked": show_ALL_itens,
 		"on_bopen_clicked": exportTo,
 		"on_bremove_clicked": removeI,
-		"on_bsaveConf_clicked": saveConf,
-		"on_new_category2_activate": addCatUI,
-		"on_export_sql_database1_activate": exportDBUI}
-		 
+		"on_new_category2_activate": addCatInterface,
+		"on_export_selected1_activate": exportDBUI,
+		"on_about1_activate": kbi_ui.about,
+		"on_create_database1_activate": addNewDatabaseUI,
+		 "on_bchange_clicked": changeExportPathUI,
+		"on_import_database1_activate": importDatabase }
+
 		
 widgetTree.signal_autoconnect (dic)
-
-dicCat = {}
-
-widgetTreeCat.signal_autoconnect(dicCat)
-
-wcat = widgetTreeCat.get_widget("wnewCat")
 window = widgetTree.get_widget("codepy")
-
 
 window.show()
 
@@ -183,9 +143,15 @@ if kbi_base.firstRun() == 1:
 	kbi_ui.message("Kbi: First Kbi run is complete! Check your ~/.kbi/ for database and configuration file.", window)
 
 # update Software Database in tree:
-kbi_base.listALL(tree_mod, "db.dat")
+kbi_base.listALL(tree_mod)
+
 # fill categories..
-getAllCats(widgetTree)
+kbi_base.getAllCats(widgetTree)
+
+# fill all databases..
+kbi_base.returnDBs(widgetTree)
+
 # Set Preferences..
 setInitPrefs(widgetTree)
+
 gtk.main()

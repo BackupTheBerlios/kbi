@@ -12,7 +12,7 @@ from pysqlite2 import dbapi2 as sqlite
 def saveDataBase(widgetTree):
 	try:
 		#get widgets..
-	
+		db_name=widgetTree.get_widget("data_combo")
 		script_name = widgetTree.get_widget("text_name")
 		cat = widgetTree.get_widget("text_cat")
 		text = widgetTree.get_widget("text_code")
@@ -20,7 +20,8 @@ def saveDataBase(widgetTree):
 
 		# Fill Database Fields..
 		
-		con = sqlite.connect(os.path.expanduser("~/.kbi/db.dat"))
+		database=db_name.get_active_text()
+		con = sqlite.connect(os.path.expanduser("~/.kbi/databases/"+database))
 		cur = con.cursor()
 
 		all_code = t.get_text(t.get_start_iter(), t.get_end_iter())
@@ -39,44 +40,66 @@ def saveDataBase(widgetTree):
 		print "E: saveDataBase()"
 		return -1
 
-#### SHOW ALL ITENS IN DATABASE #####
-def listALL(model,database):
+### RETURN ALL DATABASES AVAILABLE ###
+def returnDBs(widgetTree):
 	try:
-
-		con = sqlite.connect(os.path.expanduser("~/.kbi/"+database))
-		cur = con.cursor()
-
-		#clear the treeview
+		import glob
+		a=glob.glob(os.path.expanduser("~/.kbi/databases/*.dat"))
+		dat = widgetTree.get_widget("data_combo")
+		model = dat.get_model()
 		model.clear()
+		for x in a:
+			dat.append_text(os.path.basename(x))
+		
+		#set active item for default 
+		dat.set_active(0)
+	except:
+		print "E: returnDBs()"
 
-		cur.execute("select name, category from code order by category, name")
-		for (n,c) in cur:
-				kbi_ui.insert_item(model, None, n, c)
-		
-		
-		con.close()
+#### SHOW ALL ITENS IN DATABASE #####
+def listALL(model):
+	try:
+		model.clear()
+		for i in os.listdir(os.path.expanduser("~/.kbi/databases/")):
+			if i.endswith(".dat"):	
+				com = sqlite.connect(os.path.expanduser("~/.kbi/databases/"+i))
+				cur = com.cursor()
+				cur.execute("select name, category from code order by category, name")
+				for (n,c) in cur:
+					kbi_ui.insert_item(model, None, n,c,i)
+				com.close()
+	
 	except IOError:
-		pass
+		print "E: listALL()"
+
+
+
+
+		        
+		        
+	
 
 #### SEARCH FOR ITEM NAME ####
-def search(model, database, word):
+def search(model, word):
 	try:
+			model.clear()
+			for i in os.listdir(os.path.expanduser("~/.kbi/databases/")):
+				if i.endswith(".dat"):
+					print "Searching: "+i
+					con = sqlite.connect(os.path.expanduser("~/.kbi/databases/"+i))
+					cur = con.cursor()
 		
-	
-		con = sqlite.connect(os.path.expanduser("~/.kbi/"+database))
-		cur = con.cursor()
+					cur.execute("select name, category from code where name like:word", locals())
+		
+					for (n,c) in cur:
+						
+						kbi_ui.insert_item(model, None,n,c, i)
 
-		model.clear()
-		pal = word
-		
-		cur.execute("select name, category from code where name like:pal", locals())
-		
-		for (n,c) in cur:
-			kbi_ui.insert_item(model, None,n,c)
-
-		con.close()
+					
+					con.close()
 
 	except IOError:
+		print "E: search()"
 		sys.exit(-1)
 
 
@@ -93,11 +116,13 @@ def get_selected(treeview):
 
 		name=model.get_value(itera, 0)
 		category=model.get_value(itera, 1)
+		dataname=model.get_value(itera,2)
 	
 
-		lis=[1,2]
+		lis=[1,2,3]
 		lis[0]=name
 		lis[1]=category
+		lis[2]=dataname
 	
 		return lis
 
@@ -106,10 +131,16 @@ def get_selected(treeview):
 
 #### EXPORT SELECT FILE ############
 
-def processText(dp, treeview, database):
+def processText(dp, treeview):
 	
 
 	try:
+
+		#lst [0] - filename
+		#lst [1] - extension
+		#lst [2] - database name
+
+
 		epath = kbi_conf.returnExportConf()
 		
 		#Let's check if Export path exists..
@@ -120,25 +151,31 @@ def processText(dp, treeview, database):
 		#list with selected item..
 		lst = get_selected(treeview)
 
-		con = sqlite.connect(os.path.expanduser("~/.kbi/"+database))
-		cur = con.cursor()
+		for i in os.listdir(os.path.expanduser("~/.kbi/databases/")):
+				if i.endswith(".dat"):
+					
+					#lst[2] - database name
+					con = sqlite.connect(os.path.expanduser("~/.kbi/databases/"+lst[2]))
+					cur = con.cursor()
 
-		p = lst[0]
-		cur.execute("select name, category, texto from code where name=:p", locals())
-	
-		
-		path = os.path.expanduser(epath+"/"+lst[0]+"."+dp[lst[1]])
-		f3 = open (path, "w")
+					# p - filename
 
-		for (n,c,t) in cur:
-				f3.write(t)
+					p = lst[0]
+					cur.execute("select name, category, texto from code where name=:p", locals())
 	
-	
-		
+							
+					path = os.path.expanduser(epath+"/"+lst[0]+"."+dp[lst[1]])
+					f3 = open (path, "w")
 
-		f3.close()
+					for (n,c,t) in cur:
+						f3.write(t)
+	
+					f3.close()
 		
-		con.close()
+					con.close()
+					
+					
+					
 		return 1
 		
 	except IOError:
@@ -148,10 +185,10 @@ def processText(dp, treeview, database):
 		print "E: Anything Selected?!"
 
 ### REMOVE A ITEM #########
-def removeItem(treeview, database):
+def removeItem(treeview):
 	try:
 		lst = get_selected(treeview)
-		con = sqlite.connect(os.path.expanduser("~/.kbi/"+database))
+		con = sqlite.connect(os.path.expanduser("~/.kbi/databases/"+lst[2]))
 		cur = con.cursor()
 
 		p = lst[0]
@@ -165,47 +202,122 @@ def removeItem(treeview, database):
 		print "E: Anything Selected?!"
 
 
-### ADD NEW CATEGORY ########
-def addCat(widgetTreeCat):
-	cn = widgetTreeCat.get_widget("catname")
-	ce = widgetTreeCat.get_widget("catext")
-	print "Adding "+cn.get_text()
-	kbi_conf.setnewCat(cn.get_text(),ce.get_text())
 
 
 ### EXPORT DATABASE #####
-def exportDB():
-	import shutil, time
+def exportDB(widgetTree):
+	import shutil
 	try:
-		day=time.strftime('%a_%d_%Y')
-		filename="kib_"+day+".dat"
-		shutil.copyfile(os.path.expanduser("~/.kbi/db.dat"), os.path.expanduser(kbi_conf.returnExportConf()+"/"+filename))
+		db = widgetTree.get_widget("data_combo")
+		db_name=db.get_active_text()
+		
+		shutil.copyfile(os.path.expanduser("~/.kbi/databases/"+db_name), os.path.expanduser(kbi_conf.returnExportConf()+"/"+db_name))
 		return 1
 
 	except shutil.Error:
 		print "E: exportDB()"
 		return -1
 
+#############################################
+### CREATE A EMPTY DATABASE (MENU OPTION) ###
+#############################################
+
+def newDatabase(widgetTree):
+	wnd = gtk.glade.XML("/usr/share/kbi/kbi.glade", "newDatabase")
+	f = wnd.get_widget("newDatabase")
+	text = wnd.get_widget("text_newdb")
+	
+	new = f.run()
+
+	if new == gtk.RESPONSE_OK:
+		if text.get_text() != "":
+			createDatabase(text.get_text())
+			kbi_ui.message("Kbi: Empty database created in ~/.kbi/databases",f)	
+			#update available databases in combo box
+			returnDBs(widgetTree)
+			f.destroy()		
+			
+		else:
+			kbi_ui.error("Input a valid name in box", f)
+
+	else:
+		f.destroy()
+	
+	
+	
+##############################################
+### CREATE a EMPTY DATABASE 			 #####
+#############################################
 
 
-### CREATE a EMPTY DATABASE on FIRST-RUN #####
+def createDatabase(database):
+	con = sqlite.connect(os.path.expanduser("~/.kbi/databases/"+database))
+	cur = con.cursor()
+	cur.executescript("""
+					create table code(
+      					  name,
+       					  category,
+						  texto);  """)
+
+
+
+#####################################3
+## ADD NEW CATEGORY 				###
+#####################################
+def getAllCats(widgetTree):
+	cat = widgetTree.get_widget("text_cat")
+	mo=cat.get_model()
+	mo.clear()
+	all = kbi_conf.returnAllCat()
+	
+	
+	for i in all.split(" "):
+		x=i.split(",")
+	for j in x:
+		r=j.split("-")
+		cat.append_text(r[0])
+		
+	cat.set_active(0)
+
+
+def addCatUI(widgetTree):
+
+	widgetTreeCat = gtk.glade.XML("/usr/share/kbi/kbi.glade", "wnewCat")
+	# window - categorie
+	wcat = widgetTreeCat.get_widget("wnewCat")
+	# name / extension
+	cn = widgetTreeCat.get_widget("catname")
+	ce = widgetTreeCat.get_widget("catext")
+	
+	
+	
+
+
+	r= wcat.run()
+	if r == gtk.RESPONSE_OK:
+		# save in kbi.conf
+		kbi_conf.setnewCat(cn.get_text(),ce.get_text())
+		print "Category Saved.."
+		getAllCats(widgetTree)
+		#addNewCat(obj)
+		kbi_ui.message("Kbi: Category Saved!", wcat)
+	wcat.hide()
+
+
+
+###########################################
+### FIRST RUN 						######
+###########################################
 
 def firstRun():
 	value=-1
 	try:
 		#lets check if ~/.kbi dir exists..
 		if not os.path.exists(os.path.expanduser("~/.kbi/")):
-			os.mkdir(os.path.expanduser("~/.kbi/"))
+			os.makedirs(os.path.expanduser("~/.kbi/databases"))
 			value=1
-		if not os.path.exists(os.path.expanduser("~/.kbi/db.dat")):
-			#create database..
-			con = sqlite.connect(os.path.expanduser("~/.kbi/db.dat"))
-			cur = con.cursor()
-			cur.executescript("""
-					create table code(
-      					  name,
-       					  category,
-						  texto);  """)
+		if not os.path.exists(os.path.expanduser("~/.kbi/databases/db.dat")):
+			createDatabase("db.dat")
 			value=1
 		#Copy configuration file to homedir
 		if not os.path.exists(os.path.expanduser("~/.kbi/kbi.conf")):

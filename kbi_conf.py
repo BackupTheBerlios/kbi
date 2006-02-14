@@ -32,7 +32,7 @@ def setnewCat(name, extension):
 	try:
 		
 		c=ConfigKBI()
-		all_cats	=returnAllCat()
+		all_cats=returnAllCat()
 		new_all_cats=all_cats+","+name+"-"+extension
 		
 		
@@ -51,11 +51,11 @@ def getExport(widgetTree):
 	text_fe = fe.get_text()
 	return text_fe
 
-def SaveConfiguration(widgetTree):
+def SaveConfiguration(widgetTree, ed):
 	
 	try:
 		
-		ed = getExport(widgetTree)
+		#ed = getExport(widgetTree)
 	
 		
 		ci = ConfigKBI()
@@ -68,3 +68,18 @@ def SaveConfiguration(widgetTree):
 	except:
 		return -1
 		print "E: SaveConfiguration()"
+
+
+
+## RETURN FILE EXTENSIONS in kbi.conf - Example: Python: .py ##
+def returnExt():
+	ext={} # dict. with extensions
+	all = returnAllCat()
+	for i in all.split(" "):
+		x=i.split(",")
+
+	for j in x:
+		r=j.split("-")
+		ext[r[0]]=r[1]
+
+	return ext
