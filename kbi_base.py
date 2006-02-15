@@ -231,7 +231,13 @@ def newDatabase(widgetTree):
 
 	if new == gtk.RESPONSE_OK:
 		if text.get_text() != "":
-			createDatabase(text.get_text())
+
+			if text.get_text().endswith(".dat"):
+				createDatabase(text.get_text())
+			else:
+				createDatabase(text.get_text()+".dat")
+
+
 			kbi_ui.message("Kbi: Empty database created in ~/.kbi/databases",f)	
 			#update available databases in combo box
 			returnDBs(widgetTree)

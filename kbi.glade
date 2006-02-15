@@ -4,8 +4,8 @@
 <glade-interface>
 
 <widget class="GtkWindow" id="codepy">
-  <property name="width_request">600</property>
-  <property name="height_request">372</property>
+  <property name="width_request">753</property>
+  <property name="height_request">542</property>
   <property name="visible">True</property>
   <property name="title" translatable="yes">.: Kbi :.</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>

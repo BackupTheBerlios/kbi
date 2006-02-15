@@ -1,8 +1,10 @@
 === Version 0.2 ==
 
-* Support to multiple databases
-* Export Databases with SaveDialog
-* Read/Write on various databases
+* Support multiple databases
+* Export Databases 
+* Import Databases
+* Create Empty Databases
+* Read/Write on various Databases
 * About Dialog
 * Many bug Fixes
 
