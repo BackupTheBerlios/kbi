@@ -76,6 +76,7 @@ def saveDialog(widgetTree, windows_title):
 	if r == gtk.RESPONSE_OK:
 		shutil.copy(os.path.expanduser("~/.kbi/databases/"+db_name), chooser.get_filename())
 	
+	
 	chooser.destroy()
 
 #########################
@@ -90,10 +91,12 @@ def ImportDialog(widgetTree, windows_title):
 
 	r = chooser.run()
 	#name of file to export
-	name = chooser.get_filename()
-	db_name = os.path.basename(chooser.get_filename())
+	
 	
 	if r == gtk.RESPONSE_OK:
+		name = chooser.get_filename()
+	
+		db_name = os.path.basename(chooser.get_filename())
 		if db_name.endswith(".dat"):
 			shutil.copy(chooser.get_filename(), os.path.expanduser("~/.kbi/databases/"+db_name))
 		else:
