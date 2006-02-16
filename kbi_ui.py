@@ -63,21 +63,24 @@ def error(message, window):
 #######################
 
 def saveDialog(widgetTree, windows_title):
-	import shutil
-	chooser = gtk.FileChooserDialog(title=windows_title,action=gtk.FILE_CHOOSER_ACTION_SAVE,
+	try:
+		import shutil
+		chooser = gtk.FileChooserDialog(title=windows_title,action=gtk.FILE_CHOOSER_ACTION_SAVE,
                                   buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
 
-	r = chooser.run()
-	#name of file to export
-	name = chooser.get_filename()
-	db = widgetTree.get_widget("data_combo")
-	db_name=db.get_active_text()
+		r = chooser.run()
+		#name of file to export
+		name = chooser.get_filename()
+		db = widgetTree.get_widget("data_combo")
+		db_name=db.get_active_text()
 	
-	if r == gtk.RESPONSE_OK:
-		shutil.copy(os.path.expanduser("~/.kbi/databases/"+db_name), chooser.get_filename())
+		if r == gtk.RESPONSE_OK:
+			shutil.copy(os.path.expanduser("~/.kbi/databases/"+db_name), chooser.get_filename())
+			message("Kbi: Database Exported to: "+chooser.get_filename())
 	
-	
-	chooser.destroy()
+		chooser.destroy()
+	except:
+		print "E: saveDialog()"
 
 #########################
 ### IMPORT DATABASE #####
@@ -85,45 +88,50 @@ def saveDialog(widgetTree, windows_title):
 
 
 def ImportDialog(widgetTree, windows_title):
-	import shutil
-	chooser = gtk.FileChooserDialog(title=windows_title,action=gtk.FILE_CHOOSER_ACTION_SAVE,
+	try:
+		import shutil
+		chooser = gtk.FileChooserDialog(title=windows_title,action=gtk.FILE_CHOOSER_ACTION_SAVE,
                                   buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
 
-	r = chooser.run()
+		r = chooser.run()
 	#name of file to export
 	
 	
-	if r == gtk.RESPONSE_OK:
-		name = chooser.get_filename()
+		if r == gtk.RESPONSE_OK:
+			name = chooser.get_filename()
 	
-		db_name = os.path.basename(chooser.get_filename())
-		if db_name.endswith(".dat"):
-			shutil.copy(chooser.get_filename(), os.path.expanduser("~/.kbi/databases/"+db_name))
-		else:
-			shutil.copy(chooser.get_filename(), os.path.expanduser("~/.kbi/databases/"+db_name+".dat"))
-	
-	chooser.destroy()
+			db_name = os.path.basename(chooser.get_filename())
+			if db_name.endswith(".dat"):
+				shutil.copy(chooser.get_filename(), os.path.expanduser("~/.kbi/databases/"+db_name))
+			else:
+				shutil.copy(chooser.get_filename(), os.path.expanduser("~/.kbi/databases/"+db_name+".dat"))
+		
+		chooser.destroy()
+	except:
+		print "E: ImportDialog()"
 
 #################################
 ### CHANGE EXPORT FILE PATH ####
 ################################
 
 def changeExportPath():
+	try:
 
-	epath = kbi_conf.returnExportConf()
+		epath = kbi_conf.returnExportConf()
 
-	chooser = gtk.FileChooserDialog(title="Change Export Path",action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+		chooser = gtk.FileChooserDialog(title="Change Export Path",action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
                                   buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
-	e = chooser.run()
-	if e == gtk.RESPONSE_OK:
-		chooser.hide()
-		return chooser.get_filename()
-	else:
-		chooser.hide()
-		return epath
+		e = chooser.run()
+		if e == gtk.RESPONSE_OK:
+			chooser.hide()
+			return chooser.get_filename()
+		else:
+			chooser.hide()
+			return epath
 
-	chooser.destroy()
-
+		chooser.destroy()
+	except:
+		print "E: changeExportPath()"
 
 ### ABOUT WINDOW ###
 def about(obj):
